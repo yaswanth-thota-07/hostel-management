@@ -23,7 +23,9 @@ const subAdminSchema = new mongoose.Schema({
         type: String,
         required: true
     }
-});
+},{
+        timestamps: true
+    });
 
 const SubAdmin = mongoose.model("SubAdmin", subAdminSchema);
 
