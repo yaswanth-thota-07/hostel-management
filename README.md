@@ -56,7 +56,7 @@ npm run dev:frontend
 
 ### 4. Default Admin Credentials
 - **Email:** `admin@gmail.com`
-- **Password:** `CIDC26@admin128`
+- **Password:** `admin123`
 
 ---
 
