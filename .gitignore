@@ -1,9 +1,28 @@
+# Dependencies
 node_modules/
-dist/
-build/
+backend/node_modules/
+frontend/node_modules/
+
+# Environment Variables & Secrets
 .env
-.env.*
-!.env.example
+backend/.env
+frontend/.env
+*.env
+*.env.local
+*.env.*.local
+
+# Production Build Artifacts
+frontend/dist/
+dist/
+
+# Logs & Runtime
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 *.log
+
+# System & IDE Files
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/

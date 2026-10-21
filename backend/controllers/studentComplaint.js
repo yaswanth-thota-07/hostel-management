@@ -18,30 +18,28 @@ const createComplaint = async (req, res) => {
             });
         }
 
-        let imageUrls = [];
+        const files = req.files && req.files.length > 0 ? req.files : (req.file ? [req.file] : []);
+        const imageUrls = [];
 
-        if (req.files && req.files.length) {
-            imageUrls = await Promise.all(
-                req.files.map((file) =>
-                    new Promise((resolve, reject) => {
-                        const uploadStream = cloudinary.uploader.upload_stream(
-                            {
-                                folder: "hostel-complaints"
-                            },
-                            (error, result) => {
-                                if (error) {
-                                    reject(error);
-                                } else {
-                                    resolve(result.secure_url);
-                                }
-                            }
-                        );
+        for (const file of files) {
+            const url = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: "hostel-complaints"
+                    },
+                    (error, result) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve(result.secure_url);
+                        }
+                    }
+                );
 
-                        streamifier.createReadStream(file.buffer)
-                            .pipe(uploadStream);
-                    })
-                )
-            );
+                streamifier.createReadStream(file.buffer)
+                    .pipe(uploadStream);
+            });
+            imageUrls.push(url);
         }
 
         const complaint = await Complaint.create({

@@ -19,9 +19,9 @@ const signup = async (req, res) => {
             });
         }
 
-        if (!email.endsWith("@aitpune.edu.in")) {
+        if (!email.includes("@")) {
             return res.status(400).json({
-                message: "Use your college email"
+                message: "Enter a valid email address"
             });
         }
 
@@ -64,32 +64,33 @@ const signup = async (req, res) => {
         const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
         await OTP.findOneAndUpdate(
-    { email },
-    {
-        name,
-        email,
-        regNo,
-        phone,
-        password,
-        otp,
-        expiresAt,
-        createdAt: new Date()
-    },
-    {
-        upsert: true,
-        new: true
-    }
-);
-        const { delivered } = await sendOTPEmail(email, otp);
+            { email },
+            {
+                name,
+                email,
+                regNo,
+                phone,
+                password,
+                otp,
+                expiresAt,
+                createdAt: new Date()
+            },
+            {
+                upsert: true,
+                returnDocument: "after"
+            }
+        );
 
-        const isProduction = process.env.NODE_ENV === "production";
+        const emailResult = await sendOTPEmail(email, otp);
+
+        if (!emailResult.delivered) {
+            return res.status(500).json({
+                message: emailResult.reason || "Failed to send verification email to your address. Please contact the administrator or check email settings in backend/.env."
+            });
+        }
 
         res.status(200).json({
-            message: delivered
-                ? "OTP sent to your college email"
-                : "OTP generated — email couldn't be delivered, check the server console",
-            ...(delivered ? {} : { delivered: false }),
-            ...(isProduction ? {} : { devOtp: otp })
+            message: "OTP sent to your email"
         });
 
     } catch (error) {

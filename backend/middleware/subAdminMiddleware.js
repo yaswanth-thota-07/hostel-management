@@ -14,13 +14,17 @@ const subAdminMiddleware = (req, res, next) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        if (decoded.role !== "subadmin") {
+        if (decoded.role !== "subadmin" && decoded.role !== "admin") {
             return res.status(403).json({
-                message: "Sub-admin access required"
+                message: "Sub-admin or Admin access required"
             });
         }
 
-        req.subAdminId = decoded.id;
+        if (decoded.role === "admin") {
+            req.adminId = decoded.id;
+        } else {
+            req.subAdminId = decoded.id;
+        }
 
         next();
     } catch (error) {

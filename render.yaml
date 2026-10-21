@@ -1,27 +1,30 @@
 services:
   - type: web
-    name: hostel-management
-    env: node
+    name: hostel-management-system
+    runtime: node
     plan: free
+    region: oregon
     buildCommand: npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: MONGO_URI
-        sync: false
-      - key: MONGODB_URI
-        sync: false
+      - key: PORT
+        value: 10000
       - key: DATABASE_NAME
-        value: sehatsure
+        value: hostel_management
       - key: JWT_SECRET
         generateValue: true
+      - key: MONGODB_URI
+        sync: false
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-      - key: RESEND_API_KEY
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
         sync: false

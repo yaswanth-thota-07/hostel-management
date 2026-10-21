@@ -8,7 +8,7 @@ const upload = require("../middleware/upload");
 router.post(
     "/create",
     authMiddleware,
-    upload.array("images", 5),
+    upload.any(),
     createComplaint
 );
 

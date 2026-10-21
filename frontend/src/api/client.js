@@ -1,53 +1,151 @@
-export class ApiError extends Error {
-  constructor(status, message, data) {
-    super(message);
-    this.status = status;
-    this.data = data;
-  }
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+
+function getToken() {
+  return localStorage.getItem("hostel_token") || "";
 }
 
-async function request(path, { method = "GET", body, token, formData, raw } = {}) {
-  const headers = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
+async function request(endpoint, options = {}) {
+  const token = getToken();
+  const headers = { ...options.headers };
 
-  let options = { method, headers };
+  if (token && !headers["Authorization"]) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
 
-  if (formData) {
-    options.body = formData;
-  } else if (body !== undefined) {
+  const isFormData = options.body instanceof FormData;
+  if (!isFormData && !headers["Content-Type"]) {
     headers["Content-Type"] = "application/json";
-    options.body = JSON.stringify(body);
-  } else if (raw !== undefined) {
-    headers["Content-Type"] = "text/plain;charset=utf-8";
-    options.body = raw;
   }
 
-  let res;
+  const config = {
+    ...options,
+    headers,
+  };
+
+  const response = await fetch(`${API_BASE}${endpoint}`, config);
+  let data;
   try {
-    const url = path.startsWith("/api") ? path : `/api${path}`;
-    res = await fetch(url, options);
-  } catch {
-    throw new ApiError(0, "Can't reach the server. Is it running on port 4000?");
+    data = await response.json();
+  } catch (err) {
+    data = null;
   }
 
-  let data = null;
-  try {
-    data = await res.json();
-  } catch {
-    /* empty body */
+  if (!response.ok) {
+    const errorMsg = data?.message || "Request failed with status " + response.status;
+    const error = new Error(errorMsg);
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
 
-  if (!res.ok) {
-    throw new ApiError(res.status, data?.message || `Request failed (${res.status})`, data);
-  }
-
-  return data ?? {};
+  return data;
 }
 
 export const api = {
-  get: (path, token) => request(path, { token }),
-  post: (path, body, token) => request(path, { method: "POST", body, token }),
-  postForm: (path, formData, token) => request(path, { method: "POST", token, formData }),
-  patch: (path, body, token) => request(path, { method: "PATCH", body, token }),
-  del: (path, token) => request(path, { method: "DELETE", token })
+  student: {
+    signup: (data) =>
+      request("/api/students/signup", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    verifyOtp: (data) =>
+      request("/api/students/verify-otp", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    resendOtp: (data) =>
+      request("/api/students/resend-otp", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    login: (data) =>
+      request("/api/students/login", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    profile: () =>
+      request("/api/students/profile", {
+        method: "GET",
+      }),
+  },
+  subadmin: {
+    login: (data) =>
+      request("/api/subadmin/login", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    todayComplaints: () =>
+      request("/api/subadmin/complaints/today", {
+        method: "GET",
+      }),
+    pendingComplaints: () =>
+      request("/api/subadmin/complaints/pending", {
+        method: "GET",
+      }),
+    completedComplaints: () =>
+      request("/api/subadmin/complaints/completed", {
+        method: "GET",
+      }),
+    completeComplaint: (id, resolutionNote) =>
+      request(`/api/subadmin/complaints/${id}/complete`, {
+        method: "PATCH",
+        body: JSON.stringify({ resolutionNote }),
+      }),
+  },
+  admin: {
+    login: (data) =>
+      request("/api/admin/login", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    getSubAdmins: () =>
+      request("/api/admin/subadmins", {
+        method: "GET",
+      }),
+    createSubAdmin: (data) =>
+      request("/api/admin/create-subadmin", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    deleteSubAdmin: (id) =>
+      request(`/api/admin/delete-subadmin/${id}`, {
+        method: "DELETE",
+      }),
+    todayComplaints: () =>
+      request("/api/admin/complaints/today", {
+        method: "GET",
+      }),
+    pendingComplaints: () =>
+      request("/api/admin/complaints/pending", {
+        method: "GET",
+      }),
+    completedComplaints: () =>
+      request("/api/admin/complaints/completed", {
+        method: "GET",
+      }),
+    completeComplaint: (id, resolutionNote) =>
+      request(`/api/admin/complaints/${id}/complete`, {
+        method: "PATCH",
+        body: JSON.stringify({ resolutionNote }),
+      }),
+  },
+  complaints: {
+    create: (formData) =>
+      request("/api/complaints/create", {
+        method: "POST",
+        body: formData,
+      }),
+    pending: () =>
+      request("/api/complaints/pending", {
+        method: "GET",
+      }),
+    completed: () =>
+      request("/api/complaints/completed", {
+        method: "GET",
+      }),
+    delete: (id) =>
+      request(`/api/complaints/${id}`, {
+        method: "DELETE",
+      }),
+  },
 };

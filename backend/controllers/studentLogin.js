@@ -12,9 +12,9 @@ const login = async (req, res) => {
             });
         }
 
-        if (!email.endsWith("@aitpune.edu.in")) {
+        if (!email.includes("@")) {
             return res.status(400).json({
-                message: "Use your college email"
+                message: "Enter a valid email address"
             });
         }
          

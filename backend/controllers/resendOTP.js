@@ -41,16 +41,16 @@ const resendOTP = async (req, res) => {
 
         await otpData.save();
 
-        const { delivered } = await sendOTPEmail(email, newOTP);
+        const emailResult = await sendOTPEmail(email, newOTP);
 
-        const isProduction = process.env.NODE_ENV === "production";
+        if (!emailResult.delivered) {
+            return res.status(500).json({
+                message: emailResult.reason || "Failed to send verification email. Please check your email configuration in backend/.env."
+            });
+        }
 
         res.status(200).json({
-            message: delivered
-                ? "New OTP sent to your college email"
-                : "New OTP generated — email couldn't be delivered, check the server console",
-            ...(delivered ? {} : { delivered: false }),
-            ...(isProduction ? {} : { devOtp: newOTP })
+            message: "New OTP sent to your email"
         });
 
     } catch (error) {

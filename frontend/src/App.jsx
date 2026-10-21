@@ -1,57 +1,73 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useAuth, ROLE_ROUTES } from "./context/AuthContext";
-import { Login } from "./pages/Login";
-import { Signup } from "./pages/Signup";
-import { VerifyOTP } from "./pages/VerifyOTP";
-import { StudentDashboard } from "./pages/StudentDashboard";
-import { AdminDashboard } from "./pages/AdminDashboard";
-import { SubAdminDashboard } from "./pages/SubAdminDashboard";
-import { HelpButton } from "./components/HelpButton";
+import { usePath } from "./router.jsx";
+import { AuthProvider } from "./context/AuthContext.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
+import StudentComplaints from "./student/StudentComplaints.jsx";
+import StudentRaiseComplaint from "./student/StudentRaiseComplaint.jsx";
+import StudentProfile from "./student/StudentProfile.jsx";
+import StaffDashboard from "./warden/WardenDashboard.jsx";
+import StaffComplaints from "./warden/WardenComplaints.jsx";
+import StaffProfile from "./warden/WardenProfile.jsx";
+import WardenDashboard from "./admin/AdminDashboard.jsx";
+import WardenStaffManagement from "./admin/AdminSubAdmins.jsx";
 
-function RequireRole({ role, children }) {
-  const { auth } = useAuth();
-  if (!auth?.token) return <Navigate to="/login" replace />;
-  if (auth.role !== role) return <Navigate to={ROLE_ROUTES[auth.role] || "/login"} replace />;
-  return children;
+function AppContent() {
+  const path = usePath();
+
+  if (path === "/student/complaints") {
+    return <StudentComplaints />;
+  }
+
+  if (path === "/student/raise-complaint") {
+    return <StudentRaiseComplaint />;
+  }
+
+  if (path === "/student/profile") {
+    return <StudentProfile />;
+  }
+
+  if (
+    path === "/staff" ||
+    path === "/staff/complaints" ||
+    path === "/staff/dashboard" ||
+    path === "/subadmin/dashboard" ||
+    path === "/warden/complaints" ||
+    path === "/subadmin/complaints" ||
+    path === "/subadmin"
+  ) {
+    return <StaffComplaints />;
+  }
+
+  if (path === "/staff/profile" || path === "/warden/profile" || path === "/subadmin/profile") {
+    return <StaffProfile />;
+  }
+
+  if (
+    path === "/warden/dashboard" ||
+    path === "/admin/dashboard" ||
+    path === "/admin" ||
+    path === "/warden"
+  ) {
+    return <WardenDashboard />;
+  }
+
+  if (
+    path === "/warden/staff" ||
+    path === "/warden/subadmins" ||
+    path === "/admin/subadmins" ||
+    path === "/admin/staff" ||
+    path === "/staff/management"
+  ) {
+    return <WardenStaffManagement />;
+  }
+
+  return <LandingPage />;
 }
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/verify-otp" element={<VerifyOTP />} />
-
-        <Route
-          path="/student"
-          element={
-            <RequireRole role="student">
-              <StudentDashboard />
-            </RequireRole>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <RequireRole role="admin">
-              <AdminDashboard />
-            </RequireRole>
-          }
-        />
-        <Route
-          path="/subadmin"
-          element={
-            <RequireRole role="subadmin">
-              <SubAdminDashboard />
-            </RequireRole>
-          }
-        />
-
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-      <HelpButton />
-    </BrowserRouter>
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
+
